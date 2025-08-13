@@ -22,8 +22,7 @@ import org.mockito.quality.Strictness;
 
 import java.util.ArrayList;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -68,12 +67,12 @@ public class SavingsAccountsApiResourceTest {
     }
 
     /**
-     * Happy Path: Verify that a valid dateOfBirth parameter is correctly passed to the service layer.
+     * Happy Path: Verify that a valid birthday parameter is correctly passed to the service layer.
      */
     @Test
-    void testRetrieveAll_withValidDateOfBirthParameter() {
+    void testRetrieveAll_withValidBirthdayParameter() {
         // Given
-        final String expectedDateOfBirth = "1990-01-15";
+        final String expectedBirthday = "01-15";
         final UriInfo uriInfo = mock(UriInfo.class);
         MultivaluedMap<String, String> queryParams = new MultivaluedHashMap<>();
         when(uriInfo.getQueryParameters()).thenReturn(queryParams);
@@ -82,23 +81,23 @@ public class SavingsAccountsApiResourceTest {
                 .thenReturn(new Page<>(new ArrayList<SavingsAccountData>(), 0));
 
         // When
-        savingsAccountsApiResource.retrieveAll(uriInfo, null, null, null, null, null, null, expectedDateOfBirth);
+        savingsAccountsApiResource.retrieveAll(uriInfo, null, null, null, null, null, null, expectedBirthday);
 
         // Then
         ArgumentCaptor<SearchParameters> captor = ArgumentCaptor.forClass(SearchParameters.class);
         verify(savingsAccountReadPlatformService).retrieveAll(captor.capture());
 
         SearchParameters capturedSearchParameters = captor.getValue();
-        assertEquals(expectedDateOfBirth, capturedSearchParameters.getDateOfBirth(), "The dateOfBirth parameter should be correctly passed.");
+        assertEquals(expectedBirthday, capturedSearchParameters.getBirthday(), "The birthday parameter should be correctly passed.");
     }
 
     /**
-     * Happy Path: Verify that the dateOfBirth parameter does not interfere with other valid parameters.
+     * Happy Path: Verify that the birthday parameter does not interfere with other valid parameters.
      */
     @Test
-    void testRetrieveAll_withDateOfBirthAndOtherParameters() {
+    void testRetrieveAll_withBirthdayAndOtherParameters() {
         // Given
-        final String expectedDateOfBirth = "1990-01-15";
+        final String expectedBirthday = "01-15";
         final String sqlSearch = "client.name='John Doe'";
         final Integer limit = 50;
         final String orderBy = "id";
@@ -111,24 +110,24 @@ public class SavingsAccountsApiResourceTest {
                 .thenReturn(new Page<>(new ArrayList<SavingsAccountData>(), 0));
 
         // When
-        savingsAccountsApiResource.retrieveAll(uriInfo, sqlSearch, null, null, limit, orderBy, null, expectedDateOfBirth);
+        savingsAccountsApiResource.retrieveAll(uriInfo, sqlSearch, null, null, limit, orderBy, null, expectedBirthday);
 
         // Then
         ArgumentCaptor<SearchParameters> captor = ArgumentCaptor.forClass(SearchParameters.class);
         verify(savingsAccountReadPlatformService).retrieveAll(captor.capture());
 
         SearchParameters capturedSearchParameters = captor.getValue();
-        assertEquals(expectedDateOfBirth, capturedSearchParameters.getDateOfBirth(), "The dateOfBirth parameter should be correctly passed.");
+        assertEquals(expectedBirthday, capturedSearchParameters.getBirthday(), "The birthday parameter should be correctly passed.");
         assertEquals(sqlSearch, capturedSearchParameters.getSqlSearch(), "Other parameters should not be affected.");
         assertEquals(limit, capturedSearchParameters.getLimit(), "Limit parameter should be correctly passed.");
         assertEquals(orderBy, capturedSearchParameters.getOrderBy(), "OrderBy parameter should be correctly passed.");
     }
 
     /**
-     * Happy Path: Verify that the dateOfBirth parameter is null when not provided.
+     * Happy Path: Verify that the birthday parameter is null when not provided.
      */
     @Test
-    void testRetrieveAll_withoutDateOfBirthParameter() {
+    void testRetrieveAll_withoutBirthdayParameter() {
         // Given
         final UriInfo uriInfo = mock(UriInfo.class);
         MultivaluedMap<String, String> queryParams = new MultivaluedHashMap<>();
@@ -145,14 +144,14 @@ public class SavingsAccountsApiResourceTest {
         verify(savingsAccountReadPlatformService).retrieveAll(captor.capture());
 
         SearchParameters capturedSearchParameters = captor.getValue();
-        assertNull(capturedSearchParameters.getDateOfBirth(), "The dateOfBirth parameter should be null when not provided.");
+        assertNull(capturedSearchParameters.getBirthday(), "The birthday parameter should be null when not provided.");
     }
 
     /**
-     * Happy Path (Edge Case): Verify that an empty dateOfBirth parameter is correctly handled.
+     * Happy Path (Edge Case): Verify that an empty birthday parameter is correctly handled.
      */
     @Test
-    void testRetrieveAll_withEmptyDateOfBirthParameter() {
+    void testRetrieveAll_withEmptyBirthdayParameter() {
         // Given
         final UriInfo uriInfo = mock(UriInfo.class);
         MultivaluedMap<String, String> queryParams = new MultivaluedHashMap<>();
@@ -170,57 +169,58 @@ public class SavingsAccountsApiResourceTest {
         verify(savingsAccountReadPlatformService).retrieveAll(captor.capture());
 
         SearchParameters capturedSearchParameters = captor.getValue();
-        assertEquals("", capturedSearchParameters.getDateOfBirth(), "An empty dateOfBirth string should be passed correctly.");
+        assertEquals("", capturedSearchParameters.getBirthday(), "An empty birthday string should be passed correctly.");
     }
 
     /**
-     * Sad Path (Edge Case): Verify that an invalid dateOfBirth format is correctly handled.
+     * Sad Path (Edge Case): Verify that an invalid birthday format is correctly handled.
      */
     @Test
-    void testRetrieveAll_withInvalidDateOfBirthFormat() {
+    void testRetrieveAll_withInvalidBirthdayFormat() {
         // Given
-        final String invalidDateOfBirth = "January 15th";
+        final String invalidBirthday = "January 15th";
         final UriInfo uriInfo = mock(UriInfo.class);
         MultivaluedMap<String, String> queryParams = new MultivaluedHashMap<>();
         when(uriInfo.getQueryParameters()).thenReturn(queryParams);
 
         when(savingsAccountReadPlatformService.retrieveAll(any(SearchParameters.class)))
-                .thenReturn(new Page<>(new ArrayList<SavingsAccountData>(), 0));
+                .thenThrow(new IllegalArgumentException("Invalid 'birthday' format. Use MM-dd."));
 
-        // When
-        savingsAccountsApiResource.retrieveAll(uriInfo, null, null, null, null, null, null, invalidDateOfBirth);
+        // When & Then
+        assertThrows(IllegalArgumentException.class, () -> {
+            savingsAccountsApiResource.retrieveAll(uriInfo, null, null, null, null, null, null, invalidBirthday);
+        });
 
-        // Then
         ArgumentCaptor<SearchParameters> captor = ArgumentCaptor.forClass(SearchParameters.class);
         verify(savingsAccountReadPlatformService).retrieveAll(captor.capture());
-
         SearchParameters capturedSearchParameters = captor.getValue();
-        assertEquals(invalidDateOfBirth, capturedSearchParameters.getDateOfBirth(), "An invalid dateOfBirth string should be passed correctly.");
+        assertEquals(invalidBirthday, capturedSearchParameters.getBirthday(), "An invalid birthday string should be passed correctly.");
     }
 
     /**
-     * Sad Path (Edge Case): Verify that a future dateOfBirth date is correctly handled.
+     * Sad Path: Verifies that an invalid day for a month (e.g., February 30th)
+     * correctly throws an IllegalArgumentException.
      */
     @Test
-    void testRetrieveAll_withFutureDateOfBirth() {
+    void testRetrieveAll_withInvalidDayOfMonth() {
         // Given
-        final String futureDateOfBirth = "2030-01-15";
+        final String invalidBirthday = "02-30";
         final UriInfo uriInfo = mock(UriInfo.class);
         MultivaluedMap<String, String> queryParams = new MultivaluedHashMap<>();
         when(uriInfo.getQueryParameters()).thenReturn(queryParams);
 
         when(savingsAccountReadPlatformService.retrieveAll(any(SearchParameters.class)))
-                .thenReturn(new Page<>(new ArrayList<SavingsAccountData>(), 0));
+                .thenThrow(new IllegalArgumentException("Invalid 'birthday' format. Use MM-dd."));
 
-        // When
-        savingsAccountsApiResource.retrieveAll(uriInfo, null, null, null, null, null, null, futureDateOfBirth);
+        // When & Then
+        assertThrows(IllegalArgumentException.class, () -> {
+            savingsAccountsApiResource.retrieveAll(uriInfo, null, null, null, null, null, null, invalidBirthday);
+        });
 
-        // Then
         ArgumentCaptor<SearchParameters> captor = ArgumentCaptor.forClass(SearchParameters.class);
         verify(savingsAccountReadPlatformService).retrieveAll(captor.capture());
-
         SearchParameters capturedSearchParameters = captor.getValue();
-        assertEquals(futureDateOfBirth, capturedSearchParameters.getDateOfBirth(), "A future dateOfBirth string should be passed correctly.");
+        assertEquals(invalidBirthday, capturedSearchParameters.getBirthday(), "An invalid day of month string should be passed correctly.");
     }
 
 }
