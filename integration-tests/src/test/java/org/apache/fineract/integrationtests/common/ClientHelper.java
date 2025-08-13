@@ -207,6 +207,13 @@ public class ClientHelper extends IntegrationTest {
         return GSON.fromJson(response, PostClientsResponse.class);
     }
 
+    public static Integer createClientWithDateOfBirth(final RequestSpecification requestSpec, final ResponseSpecification responseSpec,
+                                                   final String activationDate, final String officeId, final String dateOfBirth) {
+        log.info("---------------------------------CREATING A CLIENT WITH DATE OF BIRTH---------------------------------------------");
+        return Utils.performServerPost(requestSpec, responseSpec, CREATE_CLIENT_URL,
+                getTestPersonClientWithDateOfBirthAsJSON(activationDate, officeId, dateOfBirth), "clientId");
+    }
+
     public static PostClientClientIdAddressesResponse createClientAddress(final RequestSpecification requestSpec,
             final ResponseSpecification responseSpec, long clientId, long addressTypeId, PostClientClientIdAddressesRequest request) {
         final String CREATE_CLIENT_ADDRESS_URL = "/fineract-provider/api/v1/client/" + clientId + "/addresses?type=" + addressTypeId + "&"
@@ -387,6 +394,22 @@ public class ClientHelper extends IntegrationTest {
         datatableMap.put("data", dataMap);
         datatablesListMap.add(datatableMap);
         map.put("datatables", datatablesListMap);
+        return GSON.toJson(map);
+    }
+
+    public static String getTestPersonClientWithDateOfBirthAsJSON(final String dateOfJoining, final String officeId, final String dateOfBirth) {
+        final HashMap<String, Object> map = new HashMap<>();
+        map.put("officeId", officeId);
+        map.put("fullname", Utils.randomStringGenerator("Client_FullName_", 5));
+        map.put("externalId", UUID.randomUUID().toString());
+        map.put("dateFormat", Utils.DATE_FORMAT);
+        map.put("locale", "en");
+        map.put("dateOfBirth", dateOfBirth);
+        map.put("active", "true");
+        map.put("activationDate", dateOfJoining);
+        map.put("legalFormId", 1);
+
+        log.info("map :  {}", map);
         return GSON.toJson(map);
     }
 
