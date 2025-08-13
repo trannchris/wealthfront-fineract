@@ -23,6 +23,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.ResolverStyle;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
@@ -218,11 +219,13 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             if (StringUtils.isNotBlank(searchParameters.getBirthday())) {
                 final String dateOfBirthStr = searchParameters.getBirthday().trim();
                 try {
-                    final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd");
-                    final TemporalAccessor temporal = formatter.parse(dateOfBirthStr);
+                    // Use year 2000 (leap year) to allow 02-29, but reject impossible dates
+                    final String fullDateStr = "2000-" + dateOfBirthStr;
+                    final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withResolverStyle(ResolverStyle.STRICT);
+                    final LocalDate parsedDate = LocalDate.parse(fullDateStr, formatter);
 
-                    final int month = temporal.get(java.time.temporal.ChronoField.MONTH_OF_YEAR);
-                    final int day = temporal.get(java.time.temporal.ChronoField.DAY_OF_MONTH);
+                    final int month = parsedDate.getMonthValue();
+                    final int day = parsedDate.getDayOfMonth();
 
                     sqlBuilder.append(" and MONTH(c.date_of_birth) = ? and DAYOFMONTH(c.date_of_birth) = ?");
                     objectArray[arrayPos] = month;
