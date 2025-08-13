@@ -28,6 +28,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -36,6 +37,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import lombok.Getter;
 import org.apache.fineract.client.models.PagedRequestSavingsTransactionSearch;
 import org.apache.fineract.client.models.SavingsAccountTransactionsSearchResponse;
 import org.apache.fineract.client.util.JSON;
@@ -46,6 +49,8 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.junit.jupiter.api.Assertions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static io.restassured.RestAssured.given;
 
 @SuppressWarnings({ "rawtypes" })
 public class SavingsAccountHelper {
@@ -926,6 +931,37 @@ public class SavingsAccountHelper {
         final String GSIM_URL = "/fineract-provider/api/v1/savingsaccounts/gsim/" + gsimID + "?" + Utils.TENANT_IDENTIFIER;
         return Utils.performServerPut(requestSpec, responseSpec, GSIM_URL,
                 updateGsimJSON(clientID.toString(), groupID.toString(), productID.toString()), "");
+    }
+
+    public String getSavingsAccountsWithQueryParam(final String queryParam) {
+        final String url = "/fineract-provider/api/v1/savingsaccounts?" + queryParam;
+        return given().spec(this.requestSpec).when().get(url).then().spec(this.responseSpec).extract().response().asString();
+    }
+
+    public String getSavingsAccountsWithQueryParamExpectingError(final String queryParam, final ResponseSpecification errorResponseSpec) {
+        final String url = "/fineract-provider/api/v1/savingsaccounts?" + queryParam;
+        return given().spec(this.requestSpec).when().get(url).then().spec(errorResponseSpec).extract().response().asString();
+    }
+
+    public List<Map> parseJson(final String jsonResponse) {
+        final Gson gson = new Gson();
+
+        // Define the type for the entire paginated response
+        // The generic type `Map` correctly handles Gson's internal LinkedTreeMap
+        final Type responseType = new TypeToken<PaginatedResponse<Map>>() {}.getType();
+
+        // Parse the entire response into the custom PaginatedResponse class
+        final PaginatedResponse<Map> paginatedResponse = gson.fromJson(jsonResponse, responseType);
+
+        // Get the list of items from the parsed object
+        return paginatedResponse.getPageItems();
+    }
+
+    @Getter
+    static class PaginatedResponse<T> {
+        private Long totalFilteredRecords;
+        private List<T> pageItems;
+
     }
 
 }
