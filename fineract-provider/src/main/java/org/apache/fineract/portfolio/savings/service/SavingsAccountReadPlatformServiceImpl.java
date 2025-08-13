@@ -192,7 +192,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
         sqlBuilder.append(" join m_office o on o.id = c.office_id");
         sqlBuilder.append(" where o.hierarchy like ?");
 
-        final Object[] objectArray = new Object[2];
+        final Object[] objectArray = new Object[4];
         objectArray[0] = hierarchySearchString;
         int arrayPos = 1;
         if (searchParameters != null) {
@@ -213,6 +213,20 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
                 objectArray[arrayPos] = searchParameters.getOfficeId();
                 arrayPos = arrayPos + 1;
             }
+            if (StringUtils.isNotBlank(searchParameters.getDateOfBirth())) {
+                try {
+                    final java.time.LocalDate dateOfBirth = java.time.LocalDate.parse(searchParameters.getDateOfBirth());
+                    if (dateOfBirth.isAfter(java.time.LocalDate.now())) {
+                        throw new IllegalArgumentException("Birthday cannot be in the future.");
+                    }
+                    sqlBuilder.append(" and c.date_of_birth = ?");
+                    objectArray[arrayPos] = dateOfBirth;
+                    arrayPos = arrayPos + 1;
+                } catch (java.time.format.DateTimeParseException ex) {
+                    throw new IllegalArgumentException("Invalid 'birthday' format. Use YYYY-MM-DD.", ex);
+                }
+            }
+
             if (searchParameters.isOrderByRequested()) {
                 sqlBuilder.append(" order by ").append(searchParameters.getOrderBy());
                 this.columnValidator.validateSqlInjection(sqlBuilder.toString(), searchParameters.getOrderBy());
