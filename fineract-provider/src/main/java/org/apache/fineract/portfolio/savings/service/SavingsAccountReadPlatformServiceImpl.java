@@ -22,7 +22,9 @@ import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -192,7 +194,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
         sqlBuilder.append(" join m_office o on o.id = c.office_id");
         sqlBuilder.append(" where o.hierarchy like ?");
 
-        final Object[] objectArray = new Object[4];
+        final Object[] objectArray = new Object[5];
         objectArray[0] = hierarchySearchString;
         int arrayPos = 1;
         if (searchParameters != null) {
@@ -213,17 +215,22 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
                 objectArray[arrayPos] = searchParameters.getOfficeId();
                 arrayPos = arrayPos + 1;
             }
-            if (StringUtils.isNotBlank(searchParameters.getDateOfBirth())) {
+            if (StringUtils.isNotBlank(searchParameters.getBirthday())) {
+                final String dateOfBirthStr = searchParameters.getBirthday().trim();
                 try {
-                    final java.time.LocalDate dateOfBirth = java.time.LocalDate.parse(searchParameters.getDateOfBirth());
-                    if (dateOfBirth.isAfter(java.time.LocalDate.now())) {
-                        throw new IllegalArgumentException("Birthday cannot be in the future.");
-                    }
-                    sqlBuilder.append(" and c.date_of_birth = ?");
-                    objectArray[arrayPos] = dateOfBirth;
+                    final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd");
+                    final TemporalAccessor temporal = formatter.parse(dateOfBirthStr);
+
+                    final int month = temporal.get(java.time.temporal.ChronoField.MONTH_OF_YEAR);
+                    final int day = temporal.get(java.time.temporal.ChronoField.DAY_OF_MONTH);
+
+                    sqlBuilder.append(" and MONTH(c.date_of_birth) = ? and DAYOFMONTH(c.date_of_birth) = ?");
+                    objectArray[arrayPos] = month;
+                    arrayPos = arrayPos + 1;
+                    objectArray[arrayPos] = day;
                     arrayPos = arrayPos + 1;
                 } catch (java.time.format.DateTimeParseException ex) {
-                    throw new IllegalArgumentException("Invalid 'birthday' format. Use YYYY-MM-DD.", ex);
+                    throw new IllegalArgumentException("Invalid 'birthday' format. Use MM-dd.", ex);
                 }
             }
 

@@ -36,7 +36,7 @@ public final class SearchParameters {
     private final String sortOrder;
     private final String accountNo;
     private final String currencyCode;
-    private final String dateOfBirth;
+    private final String birthday;
 
     private final Long staffId;
 
@@ -270,7 +270,7 @@ public final class SearchParameters {
         this.categoryId = null;
         this.isSelfUser = isSelfUser;
         this.status = null;
-        this.dateOfBirth = null;
+        this.birthday = null;
 
     }
 
@@ -300,7 +300,7 @@ public final class SearchParameters {
         this.categoryId = null;
         this.isSelfUser = isSelfUser;
         this.status = null;
-        this.dateOfBirth = dateOfBirth;
+        this.birthday = dateOfBirth;
     }
 
     private SearchParameters(final String sqlSearch, final Long officeId, final String externalId, final String name,
@@ -329,7 +329,7 @@ public final class SearchParameters {
         this.categoryId = null;
         this.isSelfUser = isSelfUser;
         this.status = status;
-        this.dateOfBirth = null;
+        this.birthday = null;
 
     }
 
@@ -359,7 +359,7 @@ public final class SearchParameters {
         this.categoryId = null;
         this.isSelfUser = isSelfUser;
         this.status = null;
-        this.dateOfBirth = null;
+        this.birthday = null;
     }
 
     private SearchParameters(final Long provisioningEntryId, final Long officeId, final Long productId, final Long categoryId,
@@ -386,7 +386,7 @@ public final class SearchParameters {
         this.categoryId = categoryId;
         this.isSelfUser = false;
         this.status = null;
-        this.dateOfBirth = null;
+        this.birthday = null;
 
     }
 
@@ -416,7 +416,7 @@ public final class SearchParameters {
         this.categoryId = null;
         this.isSelfUser = false;
         this.status = null;
-        this.dateOfBirth = null;
+        this.birthday = null;
 
     }
 
@@ -579,8 +579,8 @@ public final class SearchParameters {
         return this.isSelfUser;
     }
 
-    public String getDateOfBirth() {
-        return this.dateOfBirth;
+    public String getBirthday() {
+        return this.birthday;
     }
 
     /**
